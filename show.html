@@ -1,0 +1,118 @@
+<html>
+<head>
+<script type="text/javascript" src="dygraph.js"></script>
+<script type="text/javascript" src="synchronizer.js"> </script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<link rel="stylesheet" src="dygraph.css" />
+</head>
+<style>
+    .chart {width:800px; height:300px;}
+    #div1 {float: left;}
+    #div2 {float: left; clear:left;}
+    #div3 {float: left; clear:left;}
+    #div4 {float: left; clear:left;}
+    #div5 {float: left; clear:left;}
+</style>
+<body>
+<div class = "chart-container">
+    <div id = "div1" class = "chart"> </div>
+    <div id = "div2" class = "chart"> </div>
+    <div id = "div3" class = "chart"> </div>
+    <div id = "div4" class = "chart"> </div>
+    <div id = "div5" class = "chart"> </div>
+</div>
+<p>
+  Synchronize what?
+  <input type="checkbox" id="chk-zoom" checked=""><label for="chk-zoom"> Zoom</label>
+  <input type="checkbox" id="chk-selection" checked=""><label for="chk-selection"> Selection</label>
+</p>
+<script type="text/javascript">
+
+
+    
+var format = d3.timeParse('%Y-%m-%dT%H:%M:%S.%LZ')
+public_key = 'OpvZwgO8mksxJGg88PxJS18pVAb';
+url = 'http://144.6.225.24:8080/output/'+ public_key + '.json'
+
+var json = $.parseJSON($.ajax({
+        url:  url,
+        dataType: "json", 
+        async: false
+    }).responseText);
+
+var figNum = 5;
+var figJsonObj = {"figure1":['hum0','hum1','hum2'],
+                  "figure2":['mo0','mo1','mo2','mo3','mo4','mo5'],
+                  "figure3":['su0','su1','su2','su3','su4','su5'],
+                  "figure4":['tempa0','tempa1','tempa2','tempa3','tempa4','tempa5'],
+                  "figure5":['tempb0','tempb1','tempb2','tempb3','tempb4','tempb5']}
+
+//get need data
+function getFigureData(key)
+{
+    var fig = figJsonObj[key]
+    var data_str = '' + 'Date';
+    for (var i=0; i < fig.length;i++)
+    {
+        data_str = data_str + ', ' + fig[i]
+    }
+    data_str =  data_str + '\n'
+    // console.log(data_str)
+    for(var i=0; i<json.length;i++)
+    {
+        var time = json[i]["timestamp"];
+        data_str = data_str + time
+        for (var j=0; j<fig.length; j++)
+        {
+            var data = json[i][fig[j]]
+            data_str = data_str + ',' + data
+        }
+        data_str = data_str + '\n'
+    }
+    return data_str
+}
+//define operation
+
+//plotting
+var g = [];
+for (var i=0; i<figNum; i++)
+{
+    var j = i+1    
+    var figName = 'figure'+j
+    // console.log(figName)
+    var data_str = getFigureData(figName)
+    g.push(new Dygraph(document.getElementById("div"+j),data_str,
+        {
+            // interactionModel:
+            // {
+            //     'mousedown' : downV3,
+            //     'mousemove' : moveV3,
+            //     'mouseup' : upV3,
+            //     'click' : clickV3,
+            //     'dblclick' : dblClickV3,
+            //     'mousewheel' : scrollV3
+            // }
+        }))
+}
+
+
+
+sync = Dygraph.synchronize(g, {selection:true});
+
+function update() 
+{
+    var zoom = document.getElementById('chk-zoom').checked;
+    var selection = document.getElementById('chk-selection').checked;
+    sync.detach();
+    sync = Dygraph.synchronize(g, {
+          zoom: zoom,
+          selection: selection
+        });
+}
+$('#chk-zoom, #chk-selection').change(update);
+
+</script>
+</body>
+</html>
+</html>
